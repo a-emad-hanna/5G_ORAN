@@ -1,7 +1,12 @@
 # depslib dependency file v1.0
-1726239353 source:d:\github\5g_oran\milestone1\m1\main.cpp
+1726432121 source:d:\github\5g_oran\milestone1\m1\main.cpp
 	<iostream>
 	<fstream>
 	<string>
 	<sstream>
+	<iomanip>
+	<vector>
+	<cstdint>
+	<array>
+	<vector>
 
