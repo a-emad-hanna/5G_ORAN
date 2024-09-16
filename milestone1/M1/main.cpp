@@ -107,31 +107,22 @@ void parseEth(Eth &eth, const string &line)
     }
 }
 
-// CRC32 lookup table
-const std::array<uint32_t, 256> crc32_table = []() {
-    std::array<uint32_t, 256> table;
-    for (uint32_t i = 0; i < 256; ++i) {
-        uint32_t crc = i;
-        for (uint32_t j = 8; j > 0; --j) {
+uint32_t crc32(const vector<uint8_t> data) {
+    const uint32_t POLYNOMIAL = 0xEDB88320;
+    uint32_t crc = 0xFFFFFFFF;
+
+    for (uint8_t byte : data) {
+        crc ^= byte;
+        for (int i = 0; i < 8; ++i) {
             if (crc & 1) {
-                crc = (crc >> 1) ^ 0xEDB88320; // Polynomial 0xEDB88320
+                crc = (crc >> 1) ^ POLYNOMIAL;
             } else {
                 crc >>= 1;
             }
         }
-        table[i] = crc;
     }
-    return table;
-}();
-
-// CRC32 computation
-uint32_t computeCRC32(const std::vector<int>& packet) {
-    uint32_t crc = 0xFFFFFFFF;
-    for (int byte : packet) {
-        uint32_t tableIndex = (crc ^ byte) & 0xFF;
-        crc = (crc >> 8) ^ crc32_table[tableIndex];
-    }
-    return crc ^ 0xFFFFFFFF;
+    
+    return ~crc;
 }
 
 // Generate packet function
@@ -158,8 +149,8 @@ vector<int> genPacket(const Eth &eth)
     }
 
     // type/length
-    packet.push_back(0x00);
     packet.push_back(0x08);
+    packet.push_back(0x00);
 
     // payload
     for (int i = 0; i < (eth.MaxPacketSize - 26); i++)
@@ -168,8 +159,8 @@ vector<int> genPacket(const Eth &eth)
     }
 
     // CRC
-    std::vector<int> packet_data(packet.begin() + 8, packet.end());
-    uint32_t crc = computeCRC32(packet_data);
+    vector<uint8_t> packet_data(packet.begin() + 8, packet.end());
+    uint32_t crc = crc32(packet_data);
     for (int i = 0; i < 4; i++)
     {
         packet.push_back((crc >> (8 * i)) & 0xFF);
@@ -186,7 +177,6 @@ vector<int> genPacket(const Eth &eth)
     {
         packet.push_back(0x07);
     }
-
     return packet;
 }
 
@@ -234,10 +224,19 @@ int main()
     {
         eth1.AlignmentIFG++;
     }
+
+    /*
     unsigned long long numBursts = (eth1.CaptureSize * 1000) / eth1.BurstPeriodicity;
     unsigned long long totalBytes = (eth1.LineRate * eth1.CaptureSize * 1000000) / 8;
     unsigned long long burstIFG = (totalBytes / numBursts) - eth1.BurstSize * (eth1.MaxPacketSize + eth1.MinNumOfIFGPerPacket + eth1.AlignmentIFG);
     unsigned long long fillIFG = totalBytes - (numBursts * (eth1.BurstSize * (eth1.MaxPacketSize + eth1.MinNumOfIFGPerPacket + eth1.AlignmentIFG) + burstIFG));
+    */
+
+    uint64_t totalBytes = (eth1.LineRate * eth1.CaptureSize * 1000000) / 8;
+    uint64_t burstIFG = (eth1.LineRate * eth1.BurstPeriodicity * 1000) / 8;
+    uint64_t burstData = eth1.BurstSize * (eth1.MaxPacketSize + eth1.MinNumOfIFGPerPacket + eth1.AlignmentIFG) + burstIFG;
+    uint64_t numBursts = totalBytes / burstData;
+    uint64_t fillIFG = totalBytes - (numBursts * burstData);
 
     cout << "Total bytes: " << totalBytes << endl;
     cout << "Burst IFG: " << burstIFG << endl;
@@ -255,7 +254,7 @@ int main()
             int packet_size = gen_packet.size();
             for (int k = 0; k < packet_size; k += 4) 
             {
-                for (int l = 0; l < 4; ++l)
+                for (int l = 3; l >= 0; --l)
                 {
                     outFile << setw(2) << setfill('0') << hex << gen_packet[k + l];
                 }
