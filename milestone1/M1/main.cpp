@@ -126,6 +126,11 @@ vector<int> genPacket(const Eth &eth)
 
     // CRC
     vector<uint8_t> packet_data(packet.begin() + 8, packet.end());
+    /*
+    vector<uint8_t> packet_data;
+    for (int i = packet.size(); i >= 8; i--)
+        packet_data.push_back(packet[i]);
+    */
     uint32_t crc_value = crc32(0xFFFFFFFF, packet_data.data(), packet_data.size());
     for (int i = 3; i >= 0; i--)
         packet.push_back((crc_value >> (8 * i)) & 0xFF);
