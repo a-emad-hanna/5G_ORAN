@@ -14,9 +14,8 @@ using namespace std;
 // Ethernet class
 class Eth
 {
-    
 public:
-// member variables
+    // member variables
     float LineRate;               // in Gbps
     float CaptureSize;            // in ms
     int MinNumOfIFGPerPacket;
@@ -28,8 +27,7 @@ public:
     int MaxPacketSize;          // in bytes
     int BurstSize;
     float BurstPeriodicity;       // in us
-    bool DefaultPayload;
-    vector<int> Payload;
+
     // constructor
         Eth(
         float line_rate = 10,
@@ -42,41 +40,21 @@ public:
         uint8_t sfd = 0xD5,
         int max_packet_size = 1500,
         int burst_size = 3,
-        float burst_periodicity = 100,
-        bool default_payload = true,
-        vector<int> payload = {}
+        float burst_periodicity = 100
     )
     {
         LineRate = line_rate;
         CaptureSize = capture_size;
         MinNumOfIFGPerPacket = min_num_of_ifg_per_packet;
-        AlignmentIFG = alignment_ifg;
+        MaxPacketSize = max_packet_size;
+        BurstSize = burst_size;
+        BurstPeriodicity = burst_periodicity;
         DestAddress = dest_address;
         SourceAddress = source_address;
         Preamble = preamble;
         SFD = sfd;
-        MaxPacketSize = max_packet_size;
-        BurstSize = burst_size;
-        BurstPeriodicity = burst_periodicity;
-        DefaultPayload = default_payload;
-        Payload = payload;
+        AlignmentIFG = alignment_ifg;
     }
-
-    /*
-    float getLineRate() const { return LineRate; }
-    float getCaptureSize() const { return CaptureSize; }
-    int getMinNumOfIFGPerPacket() const { return MinNumOfIFGPerPacket; }
-    int getAlignmentIFG() const { return AlignmentIFG; }
-    uint64_t getDestAddress() const { return DestAddress; }
-    uint64_t getSourceAddress() const { return SourceAddress; }
-    uint64_t getPreamble() const { return Preamble; }
-    uint8_t getSFD() const { return SFD; }
-    int getMaxPacketSize() const { return MaxPacketSize; }
-    int getBurstSize() const { return BurstSize; }
-    float getBurstPeriodicity() const { return BurstPeriodicity; }
-    bool getDefaultPayload() const { return DefaultPayload; }
-    vector<int> getPayload() const { return Payload; }
-    */
 
     // printing
     void printData()
@@ -90,92 +68,97 @@ public:
         cout << "BurstSize: " << dec << BurstSize << endl;
         cout << "BurstPeriodicity: " << dec << BurstPeriodicity << " us" << endl;
     }
-
-    // parse function
-    void parseEth(const string &line)
-    {
-        string key, equal_sign, value;
-        istringstream iss(line);
-        iss >> key >> equal_sign >> value;
-
-        if (key == "Eth.LineRate")
-            LineRate = stof(value);
-        else if (key == "Eth.CaptureSizeMs")
-            CaptureSize = stof(value);
-        else if (key == "Eth.MinNumOfIFGsPerPacket")
-            MinNumOfIFGPerPacket = stoi(value);
-        else if (key == "Eth.DestAddress")
-            DestAddress = stoull(value, nullptr, 16);  
-        else if (key == "Eth.SourceAddress")
-            SourceAddress = stoull(value, nullptr, 16); 
-        else if (key == "Eth.MaxPacketSize")
-            MaxPacketSize = stoi(value);
-        else if (key == "Eth.BurstSize")
-            BurstSize = stoi(value);
-        else if (key == "Eth.BurstPeriodicity_us")
-            BurstPeriodicity = stof(value);
-    }
-
-    // generate packet
-    vector<int> genPacket(const Eth &eth)
-    {
-        vector<int> packet;
-
-        // preamble and SFD
-        for (int i = 6; i >= 0; i--)
-            packet.push_back((eth.Preamble >> (8 * i)) & 0xFF);
-
-        // SFD
-        packet.push_back(eth.SFD);
-
-        // destination address
-        for (int i = 5; i >= 0; i--)
-            packet.push_back((eth.DestAddress >> (8 * i)) & 0xFF);
-
-        // source address
-        for (int i = 5; i >= 0; i--)
-            packet.push_back((eth.SourceAddress >> (8 * i)) & 0xFF);
-
-        // type/length
-        packet.push_back(0xAE);
-        packet.push_back(0xFE);
-
-        // payload
-        if (eth.DefaultPayload)
-        {
-            for (int i = 0; i < (eth.MaxPacketSize - 26); i++)
-                packet.push_back(0x00);
-        }
-        else
-        {
-            for (int i = 0; i < eth.Payload.size(); i++)
-                packet.push_back(eth.Payload[i]);
-        }
-
-        // CRC
-        vector<uint8_t> packet_data(packet.begin() + 8, packet.end());
-        /*
-        vector<uint8_t> packet_data;
-        for (int i = packet.size(); i >= 8; i--)
-            packet_data.push_back(packet[i]);
-        */
-        uint32_t crc_value = crc32(0xFFFFFFFF, packet_data.data(), packet_data.size());
-        for (int i = 3; i >= 0; i--)
-            packet.push_back((crc_value >> (8 * i)) & 0xFF);
-
-        // IFG
-        for (int i = 0; i < eth.MinNumOfIFGPerPacket; i++)
-            packet.push_back(0x07);
-
-        // Alignment IFG
-        for (int i = 0; i < eth.AlignmentIFG; i++)
-            packet.push_back(0x07);
-
-        return packet;
-    }
 };
 
+// ECPRI class
+class ECPRI
+{
+public:
+    // member variables
+    uint8_t Version_Reserved_Concat;
+    uint8_t Message;
+    uint8_t PayloadLength;
+    uint8_t PC_RTC;
+    uint8_t SeqID;
+};
 
+// ORAN class
+
+// parse function
+void parseEth(Eth &eth, const string &line)
+{
+    string key, equal_sign, value;
+    istringstream iss(line);
+    iss >> key >> equal_sign >> value;
+
+    if (key == "Eth.LineRate")
+        eth.LineRate = stof(value);
+    else if (key == "Eth.CaptureSizeMs")
+        eth.CaptureSize = stof(value);
+    else if (key == "Eth.MinNumOfIFGsPerPacket")
+        eth.MinNumOfIFGPerPacket = stoi(value);
+    else if (key == "Eth.DestAddress")
+        eth.DestAddress = stoull(value, nullptr, 16);  
+    else if (key == "Eth.SourceAddress")
+        eth.SourceAddress = stoull(value, nullptr, 16); 
+    else if (key == "Eth.MaxPacketSize")
+        eth.MaxPacketSize = stoi(value);
+    else if (key == "Eth.BurstSize")
+        eth.BurstSize = stoi(value);
+    else if (key == "Eth.BurstPeriodicity_us")
+        eth.BurstPeriodicity = stof(value);
+}
+
+// Generate packet function
+vector<int> genPacket(const Eth &eth)
+{
+    vector<int> packet;
+
+    // preamble and SFD
+    for (int i = 6; i >= 0; i--)
+        packet.push_back((eth.Preamble >> (8 * i)) & 0xFF);
+
+    // SFD
+    packet.push_back(eth.SFD);
+
+    // destination address
+    for (int i = 5; i >= 0; i--)
+        packet.push_back((eth.DestAddress >> (8 * i)) & 0xFF);
+
+    // source address
+    for (int i = 5; i >= 0; i--)
+        packet.push_back((eth.SourceAddress >> (8 * i)) & 0xFF);
+
+    // type/length
+    packet.push_back(0xAE);
+    packet.push_back(0xFE);
+
+    // payload
+    //for (int i = 0; i < 6; i++)
+    for (int i = 0; i < (eth.MaxPacketSize - 26); i++)
+        packet.push_back(0x00);
+
+    // CRC
+    vector<uint8_t> packet_data(packet.begin() + 8, packet.end());
+    /*
+    vector<uint8_t> packet_data;
+    for (int i = packet.size(); i >= 8; i--)
+        packet_data.push_back(packet[i]);
+    */
+    uint32_t crc_value = crc32(0xFFFFFFFF, packet_data.data(), packet_data.size());
+    for (int i = 3; i >= 0; i--)
+        packet.push_back((crc_value >> (8 * i)) & 0xFF);
+
+    // IFG
+    for (int i = 0; i < eth.MinNumOfIFGPerPacket; i++)
+        packet.push_back(0x07);
+
+    // Alignment IFG
+    for (int i = 0; i < eth.AlignmentIFG; i++)
+        packet.push_back(0x07);
+
+    return packet;
+}
 
 int main()
 {
@@ -184,9 +167,9 @@ int main()
     vector<int> gen_packet;
 
     // input file path from user
-    string filePath = "D:\\GitHub\\5G_ORAN\\milestone1\\M1\\first_milestone.txt";
-    //cout << "Enter the input file path: ";
-    //getline(cin, filePath);
+    string filePath;
+    cout << "Enter the input file path: ";
+    getline(cin, filePath);
 
     // read & parse
     ifstream EthFile(filePath);
@@ -195,7 +178,7 @@ int main()
         string line;
         while (getline(EthFile, line))
         {
-            eth1.parseEth(line);
+            parseEth(eth1, line);
         }
         EthFile.close();
     }
@@ -222,8 +205,6 @@ int main()
         eth1.AlignmentIFG++;
     }
 
-
-
     uint64_t totalBytes = (eth1.LineRate * eth1.CaptureSize * 1000000) / 8;
     uint64_t burstIFG = (eth1.LineRate * eth1.BurstPeriodicity * 1000) / 8;
     uint64_t burstData = eth1.BurstSize * (eth1.MaxPacketSize + eth1.MinNumOfIFGPerPacket + eth1.AlignmentIFG) + burstIFG;
@@ -242,7 +223,7 @@ int main()
         for (int j = 0; j < eth1.BurstSize; j++)
         {
             // generate packet with IFG
-            gen_packet = eth1.genPacket(eth1);
+            gen_packet = genPacket(eth1);
             int packet_size = gen_packet.size();
             for (int k = 0; k < packet_size; k += 4) 
             {
