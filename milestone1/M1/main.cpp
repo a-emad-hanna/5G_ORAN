@@ -14,9 +14,8 @@ using namespace std;
 // Ethernet class
 class Eth
 {
-    
-public:
-// member variables
+private:
+   // member variables
     float LineRate;               // in Gbps
     float CaptureSize;            // in ms
     int MinNumOfIFGPerPacket;
@@ -30,6 +29,8 @@ public:
     float BurstPeriodicity;       // in us
     bool DefaultPayload;
     vector<int> Payload;
+    
+public:
     // constructor
         Eth(
         float line_rate = 10,
@@ -62,7 +63,7 @@ public:
         Payload = payload;
     }
 
-    /*
+    // getter functions
     float getLineRate() const { return LineRate; }
     float getCaptureSize() const { return CaptureSize; }
     int getMinNumOfIFGPerPacket() const { return MinNumOfIFGPerPacket; }
@@ -74,9 +75,11 @@ public:
     int getMaxPacketSize() const { return MaxPacketSize; }
     int getBurstSize() const { return BurstSize; }
     float getBurstPeriodicity() const { return BurstPeriodicity; }
-    bool getDefaultPayload() const { return DefaultPayload; }
-    vector<int> getPayload() const { return Payload; }
-    */
+
+    // setter functions
+    void setAlignmentIFG(int alignment_ifg) { AlignmentIFG = alignment_ifg; }
+    void setDefaultPayload(bool default_payload) { DefaultPayload = default_payload; }
+    void setPayload(vector<int> payload) { Payload = payload; }
 
     // printing
     void printData()
@@ -175,8 +178,6 @@ public:
     }
 };
 
-
-
 int main()
 {
     // initialize 
@@ -217,16 +218,17 @@ int main()
     }
 
     // Calculations
-    while ((eth1.MaxPacketSize + eth1.MinNumOfIFGPerPacket + eth1.AlignmentIFG) % 4 != 0)
+    int a = 0;
+    while ((eth1.getMaxPacketSize() + eth1.getMinNumOfIFGPerPacket() + eth1.getAlignmentIFG()) % 4 != 0)
     {
-        eth1.AlignmentIFG++;
+        a++;
     }
+    eth1.setAlignmentIFG(a);
 
 
-
-    uint64_t totalBytes = (eth1.LineRate * eth1.CaptureSize * 1000000) / 8;
-    uint64_t burstIFG = (eth1.LineRate * eth1.BurstPeriodicity * 1000) / 8;
-    uint64_t burstData = eth1.BurstSize * (eth1.MaxPacketSize + eth1.MinNumOfIFGPerPacket + eth1.AlignmentIFG) + burstIFG;
+    uint64_t totalBytes = (eth1.getLineRate() * eth1.getCaptureSize() * 1000000) / 8;
+    uint64_t burstIFG = (eth1.getLineRate() * eth1.getBurstPeriodicity() * 1000) / 8;
+    uint64_t burstData = eth1.getBurstSize() * (eth1.getMaxPacketSize() + eth1.getMinNumOfIFGPerPacket() + eth1.getAlignmentIFG()) + burstIFG;
     uint64_t numBursts = totalBytes / burstData;
     uint64_t fillIFG = totalBytes - (numBursts * burstData);
 
@@ -234,12 +236,12 @@ int main()
     cout << "Burst IFG: " << burstIFG << endl;
     cout << "Number of bursts: " << numBursts << endl;
     cout << "Fill IFG: " << fillIFG << endl;
-    cout << "Alignment IFG: " << eth1.AlignmentIFG << endl;
+    cout << "Alignment IFG: " << eth1.getAlignmentIFG() << endl;
     
     for (int i = 0; i < numBursts; i++)
     {
         // generate bursts
-        for (int j = 0; j < eth1.BurstSize; j++)
+        for (int j = 0; j < eth1.getBurstSize(); j++)
         {
             // generate packet with IFG
             gen_packet = eth1.genPacket(eth1);
