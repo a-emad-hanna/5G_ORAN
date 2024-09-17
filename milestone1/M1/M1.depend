@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1726482278 source:d:\github\5g_oran\milestone1\m1\main.cpp
+1726572013 source:d:\github\5g_oran\milestone1\m1\main.cpp
 	<iostream>
 	<fstream>
 	<string>
@@ -9,4 +9,18 @@
 	<cstdint>
 	<array>
 	<vector>
+	<zlib.h>
+
+1686064716 c:\strawberry\c\include\zlib.h
+	"zconf.h"
+
+1686064716 c:\strawberry\c\include\zconf.h
+	<stddef.h>
+	<windows.h>
+	<limits.h>
+	<sys/types.h>
+	<stdarg.h>
+	<stddef.h>
+	<unistd.h>
+	<unixio.h>
 
