@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1726597108 source:d:\github\5g_oran\milestone1\m1\main.cpp
+1726608283 source:d:\github\5g_oran\milestone1\m1\main.cpp
 	<iostream>
 	<fstream>
 	<string>
@@ -10,6 +10,7 @@
 	<array>
 	<vector>
 	<zlib.h>
+	"Eth.h"
 
 1686064716 c:\strawberry\c\include\zlib.h
 	"zconf.h"
@@ -23,4 +24,17 @@
 	<stddef.h>
 	<unistd.h>
 	<unixio.h>
+
+1726608196 d:\github\5g_oran\milestone1\m1\eth.h
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<iomanip>
+	<vector>
+	<cstdint>
+	<zlib.h>
+
+1726608224 source:d:\github\5g_oran\milestone1\m1\eth.cpp
+	"Eth.h"
 
