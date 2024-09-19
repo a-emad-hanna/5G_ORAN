@@ -1,0 +1,56 @@
+# depslib dependency file v1.0
+1726764507 source:d:\github\5g_oran\milestone2\m2\eth.cpp
+	"Eth.h"
+
+1726764471 d:\github\5g_oran\milestone2\m2\eth.h
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<iomanip>
+	<vector>
+	<cstdint>
+	<zlib.h>
+
+1726784144 source:d:\github\5g_oran\milestone2\m2\main.cpp
+	<iostream>
+	<fstream>
+	<string>
+	<iomanip>
+	<vector>
+	<cstdint>
+	<cmath>
+	"Eth.h"
+	"ECPRI.h"
+	"ORAN.h"
+
+1686064716 d:\github\5g_oran\milestone2\m2\\zlib.h
+	"zconf.h"
+
+1726667228 d:\github\5g_oran\milestone2\m2\ecpri.h
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<iomanip>
+	<vector>
+	<cstdint>
+	<zlib.h>
+
+1726783937 d:\github\5g_oran\milestone2\m2\oran.h
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<iomanip>
+	<vector>
+	<cstdint>
+	<zlib.h>
+	<random>
+
+1726667233 source:d:\github\5g_oran\milestone2\m2\ecpri.cpp
+	"ECPRI.h"
+
+1726783988 source:d:\github\5g_oran\milestone2\m2\oran.cpp
+	"ORAN.h"
+
