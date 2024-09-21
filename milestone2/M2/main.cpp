@@ -46,13 +46,20 @@ int main()
     oran1.printData();
 
     // test 
-    vector<int8_t> gen_packet = oran1.genPacket(1, 1, 1, 1, 1);
-    for (int i = 0; i < gen_packet.size(); i++)
-    {
-        cout << hex << static_cast<unsigned int>(gen_packet[i]) << endl;
-    }
-
 /*
+    vector<int16_t> oran_packet = oran1.genPacket(1, 2, 2, 4, 5);
+    // generate ECPRI packet (Ethernet payload)
+     cout << hex <<  static_cast<unsigned int>(oran_packet.size()) << endl;
+    ecpri1.setpayloadSize(oran_packet.size());
+    ecpri1.setPayload(oran_packet);
+    vector<int16_t> ecpri_packet = ecpri1.genPacket();
+    for (int i = 0; i < ecpri_packet.size(); i++)
+    {
+        cout << hex << static_cast<unsigned int>(ecpri_packet[i]) << endl;
+    }
+*/
+
+
     // calculations
     uint8_t numFrames = ceil(eth1.getCaptureSize() / 10);
     uint8_t scs = oran1.getSCS();
@@ -82,6 +89,14 @@ int main()
     cout << "Number of slots: " << dec << static_cast<unsigned int>(numSlots) << endl;
     cout << "Number of packets: " << dec << static_cast<unsigned int>(numPackets) << endl;
 
+    // output file
+    ofstream outFile("packets.txt");
+    if (!outFile.is_open())
+    {
+        cout << "Unable to open output file" << endl;
+        return 1;
+    }
+
     // generate packets
     for (int i = 0; i < numFrames; i++)
     {
@@ -93,87 +108,37 @@ int main()
                 {
                     for (int m = 0; m < numPackets; m++)
                     {
-                        vector<uint8_t> ecpri_payload = oran1.genPacket(i, j, k, l, m);
+                        // generate ORAN packet (ECPRI payload)
+                        vector<uint8_t> oran_packet = oran1.genPacket(i, j, k, l, m);
+
+                        // generate ECPRI packet (Ethernet payload)
+                        ecpri1.setpayloadSize(oran_packet.size());
+                        ecpri1.setPayload(oran_packet);
+                        vector<uint8_t> ecpri_packet = ecpri1.genPacket();
+
+                        // generate Ethernet packet
+                        eth1.setDefaultPayload(false);
+                        eth1.setPayload(ecpri_packet);
+                        vector<uint8_t> eth_packet = eth1.genPacket();
+
+                        cout << eth_packet.size() << endl;
+
+                        // write to file
+                        int nBytes = eth_packet.size();
+                        for (int n = 0; n < nBytes; n += 4)
+                        {
+                            for (int o = 0; o < 4; o++)
+                            {
+                                outFile << setw(2) << setfill('0') << hex << static_cast<int>((eth_packet[n + o]));
+                            }
+                            outFile << endl;
+                        }
                     }
                 }   
             }
         }
     }
-
-*/
-
-    /*
-    // set ethernet paload to zeros
-    eth1.setDefaultPayload(true);
-
-    // output file
-    ofstream outFile("packets.txt");
-    if (!outFile.is_open())
-    {
-        cout << "Unable to open output file" << endl;
-        return 1;
-    }
-
-    // Calculations
-    int a = 0;
-    while ((eth1.getMaxPacketSize() + eth1.getMinNumOfIFGPerPacket() + eth1.getAlignmentIFG()) % 4 != 0)
-    {
-        a++;
-    }
-    eth1.setAlignmentIFG(a);
-
-
-    uint64_t totalBytes = (eth1.getLineRate() * eth1.getCaptureSize() * 1000000) / 8;
-    uint64_t burstIFG = (eth1.getLineRate() * eth1.getBurstPeriodicity() * 1000) / 8;
-    uint64_t burstData = eth1.getBurstSize() * (eth1.getMaxPacketSize() + eth1.getMinNumOfIFGPerPacket() + eth1.getAlignmentIFG()) + burstIFG;
-    uint64_t numBursts = totalBytes / burstData;
-    uint64_t fillIFG = totalBytes - (numBursts * burstData);
-
-    cout << "Total bytes: " << totalBytes << endl;
-    cout << "Burst IFG: " << burstIFG << endl;
-    cout << "Number of bursts: " << numBursts << endl;
-    cout << "Fill IFG: " << fillIFG << endl;
-    cout << "Alignment IFG: " << eth1.getAlignmentIFG() << endl;
-    
-    for (int i = 0; i < numBursts; i++)
-    {
-        // generate bursts
-        for (int j = 0; j < eth1.getBurstSize(); j++)
-        {
-            // generate packet with IFG
-            gen_packet = eth1.genPacket(eth1);
-            int packet_size = gen_packet.size();
-            for (int k = 0; k < packet_size; k += 4) 
-            {
-                for (int l = 0; l < 4; ++l)
-                {
-                    outFile << setw(2) << setfill('0') << hex << gen_packet[k + l];
-                }
-                outFile << endl; 
-            }
-        }
-        // generate IFG between bursts
-        for (int j = 0; j < burstIFG; j += 4)
-        {
-            for (int k = 0; k < 4; ++k)
-            {
-                outFile << setw(2) << setfill('0') << hex << 0x07;
-            }
-            outFile << endl;
-        }
-    }
-    // generate IFG to fill the remaining bytes
-    for (int i = 0; i < fillIFG; i += 4)
-    {
-        for (int j = 0; j < 4; ++j)
-        {
-            outFile << setw(2) << setfill('0') << hex << 0x07;
-        }
-        outFile << endl;
-    }
-
     outFile.close();
-    */
 
     return 0;
 }

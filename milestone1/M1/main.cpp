@@ -13,7 +13,7 @@ int main()
 {
     // initialize 
     Eth eth1;
-    vector<int> gen_packet;
+    vector<uint8_t> gen_packet;
 
     // input file path from user
     string filePath; // = "D:\\GitHub\\5G_ORAN\\milestone1\\M1\\first_milestone.txt";
@@ -49,14 +49,6 @@ int main()
     }
 
     // Calculations
-    int a = 0;
-    while ((eth1.getMaxPacketSize() + eth1.getMinNumOfIFGPerPacket() + eth1.getAlignmentIFG()) % 4 != 0)
-    {
-        a++;
-    }
-    eth1.setAlignmentIFG(a);
-
-
     uint64_t totalBytes = (eth1.getLineRate() * eth1.getCaptureSize() * 1000000) / 8;
     uint64_t burstIFG = (eth1.getLineRate() * eth1.getBurstPeriodicity() * 1000) / 8;
     uint64_t burstData = eth1.getBurstSize() * (eth1.getMaxPacketSize() + eth1.getMinNumOfIFGPerPacket() + eth1.getAlignmentIFG()) + burstIFG;
@@ -75,13 +67,13 @@ int main()
         for (int j = 0; j < eth1.getBurstSize(); j++)
         {
             // generate packet with IFG
-            gen_packet = eth1.genPacket(eth1);
+            gen_packet = eth1.genPacket();
             int packet_size = gen_packet.size();
             for (int k = 0; k < packet_size; k += 4) 
             {
                 for (int l = 0; l < 4; ++l)
                 {
-                    outFile << setw(2) << setfill('0') << hex << gen_packet[k + l];
+                    outFile << setw(2) << setfill('0') << hex << static_cast<int>(gen_packet[k + l]);
                 }
                 outFile << endl; 
             }

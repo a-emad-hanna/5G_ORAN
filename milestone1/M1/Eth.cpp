@@ -4,7 +4,7 @@
 Eth::Eth(float line_rate, float capture_size, int min_num_of_ifg_per_packet,
          int alignment_ifg, uint64_t dest_address, uint64_t source_address,
          uint64_t preamble, uint8_t sfd, int max_packet_size, int burst_size,
-         float burst_periodicity, bool default_payload, vector<int> payload)
+         float burst_periodicity, bool default_payload, vector<uint8_t> payload)
 {
     LineRate = line_rate;
     CaptureSize = capture_size;
@@ -37,7 +37,7 @@ float Eth::getBurstPeriodicity() const { return BurstPeriodicity; }
 // setter implementations
 void Eth::setAlignmentIFG(int alignment_ifg) { AlignmentIFG = alignment_ifg; }
 void Eth::setDefaultPayload(bool default_payload) { DefaultPayload = default_payload; }
-void Eth::setPayload(vector<int> payload) { Payload = payload; }
+void Eth::setPayload(vector<uint8_t> payload) { Payload = payload; }
 
 // print function implementation
 void Eth::printData()
@@ -78,43 +78,53 @@ void Eth::parseEth(const string &line)
 }
 
 // generate packet function implementation
-vector<int> Eth::genPacket(const Eth &eth)
+vector<uint8_t> Eth::genPacket()
 {
-    vector<int> packet;
+    vector<uint8_t> packet;
     
-    // generate Ethernet packet
+    // Preamble and SFD
     for (int i = 6; i >= 0; i--)
-        packet.push_back((eth.Preamble >> (8 * i)) & 0xFF);
-    packet.push_back(eth.SFD);
+        packet.push_back((Preamble >> (8 * i)) & 0xFF);
+    packet.push_back(SFD);
 
+    // Destination and Source Addresses
     for (int i = 5; i >= 0; i--)
-        packet.push_back((eth.DestAddress >> (8 * i)) & 0xFF);
+        packet.push_back((DestAddress >> (8 * i)) & 0xFF);
     for (int i = 5; i >= 0; i--)
-        packet.push_back((eth.SourceAddress >> (8 * i)) & 0xFF);
+        packet.push_back((SourceAddress >> (8 * i)) & 0xFF);
 
+    // Type
     packet.push_back(0xAE);
     packet.push_back(0xFE);
 
-    if (eth.DefaultPayload)
+    // Payload
+    if (DefaultPayload)
     {
-        for (int i = 0; i < (eth.MaxPacketSize - 26); i++)
+        for (int i = 0; i < (MaxPacketSize - 26); i++)
             packet.push_back(0x00);
     }
     else
     {
-        for (int i = 0; i < eth.Payload.size(); i++)
-            packet.push_back(eth.Payload[i]);
+        for (int i = 0; i < Payload.size(); i++)
+            packet.push_back(Payload[i]);
     }
 
+    // CRC
     vector<uint8_t> packet_data(packet.begin() + 8, packet.end());
     uint32_t crc_value = crc32(0xFFFFFFFF, packet_data.data(), packet_data.size());
     for (int i = 3; i >= 0; i--)
         packet.push_back((crc_value >> (8 * i)) & 0xFF);
 
-    for (int i = 0; i < eth.MinNumOfIFGPerPacket; i++)
+    // IFG  
+    for (int i = 0; i < MinNumOfIFGPerPacket; i++)
         packet.push_back(0x07);
 
-    for (int i = 0; i < eth.AlignmentIFG; i++)
+    // Alignment IFG
+    while ((MaxPacketSize + MinNumOfIFGPerPacket + AlignmentIFG) % 4 != 0)
+    {
+        AlignmentIFG++;
+    }
+    for (int i = 0; i < AlignmentIFG; i++)
         packet.push_back(0x07);
 
     return packet;

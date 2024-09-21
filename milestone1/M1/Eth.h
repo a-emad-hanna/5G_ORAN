@@ -28,7 +28,7 @@ private:
     int BurstSize;
     float BurstPeriodicity;
     bool DefaultPayload;
-    vector<int> Payload;
+    vector<uint8_t> Payload;
 
 public:
     // constructor
@@ -45,7 +45,7 @@ public:
         int burst_size = 3,
         float burst_periodicity = 100,
         bool default_payload = true,
-        vector<int> payload = {});
+        vector<uint8_t> payload = {});
 
     // getter functions
     float getLineRate() const;
@@ -63,7 +63,7 @@ public:
     // setter functions
     void setAlignmentIFG(int alignment_ifg);
     void setDefaultPayload(bool default_payload);
-    void setPayload(vector<int> payload);
+    void setPayload(vector<uint8_t> payload);
 
     // printing
     void printData();
@@ -72,7 +72,7 @@ public:
     void parseEth(const string &line);
 
     // generate packet
-    vector<int> genPacket(const Eth &eth);
+    vector<uint8_t> genPacket();
 };
 
 #endif

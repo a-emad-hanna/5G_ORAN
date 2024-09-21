@@ -1,9 +1,8 @@
 #include "ECPRI.h"
 
 // constructor implementation
-ECPRI::ECPRI(int ver_res_concat, int message_type, int payload_size, int pc_rtc, int seq_id, vector<int> payload)
+ECPRI::ECPRI(uint8_t message_type, uint16_t payload_size, uint16_t pc_rtc, uint16_t seq_id, vector<uint8_t> payload)
 {
-    Ver_Res_Concat = ver_res_concat;
     Message_Type = message_type;
     Payload_Size = payload_size;
     PC_RTC = pc_rtc;
@@ -12,22 +11,19 @@ ECPRI::ECPRI(int ver_res_concat, int message_type, int payload_size, int pc_rtc,
 }
 
 // getter implementations
-int ECPRI::getVerResConcat() const { return Ver_Res_Concat; }
-int ECPRI::getMessageType() const { return Message_Type; }
-int ECPRI::getPayloadSize() const { return Payload_Size; }
-int ECPRI::getPCRTC() const { return PC_RTC; }
-int ECPRI::getSeqID() const { return SeqID; }
-vector<int> ECPRI::getPayload() const { return Payload; }
+uint8_t ECPRI::getMessageType() const { return Message_Type; }
+uint16_t ECPRI::getPayloadSize() const { return Payload_Size; }
+uint16_t ECPRI::getPCRTC() const { return PC_RTC; }
+uint16_t ECPRI::getSeqID() const { return SeqID; }
+vector<uint8_t> ECPRI::getPayload() const { return Payload; }
 
 // setter implementations
-void ECPRI::setpayloadSize(int payload_size) { Payload_Size = payload_size; }
-void ECPRI::setseqID(int seq_id) { SeqID = seq_id; }
-void ECPRI::setPayload(vector<int> payload) { Payload = payload; }
+void ECPRI::setpayloadSize(uint16_t payload_size) { Payload_Size = payload_size; }
+void ECPRI::setPayload(vector<uint8_t> payload) { Payload = payload; }
 
 // print function implementation
 void ECPRI::printData()
 {
-    cout << "Ver_Res_Concat: " << hex << Ver_Res_Concat << endl;
     cout << "Message_Type: " << hex << Message_Type << endl;
     cout << "Payload_Size: " << dec << Payload_Size << " bytes" << endl;
     cout << "PC_RTC: " << hex << PC_RTC << endl;
@@ -35,17 +31,36 @@ void ECPRI::printData()
 }
 
 // generate packet function implementation
-vector<int> ECPRI::genPacket(const ECPRI &ecpri)
+vector<uint8_t> ECPRI::genPacket()
 {
-    vector<int> packet;
+    vector<uint8_t> packet;
 
-    // generate ECPRI packet
-    packet.push_back(ecpri.getVerResConcat());
-    packet.push_back(ecpri.getMessageType());
-    packet.push_back((ecpri.getPayloadSize()));
-    packet.push_back(ecpri.getPayloadSize());
-    packet.push_back(ecpri.getPCRTC());
-    packet.push_back((ecpri.getSeqID()));
-    packet.push_back(ecpri.getSeqID() & 0xFF);
+    // byte 0: Version | Reserved | Concatenation
+    packet.push_back(0x00);
+
+    // byte 1: Message Type
+    packet.push_back(Message_Type);
+
+    // bytes 2 & 3: Payload Size
+    packet.push_back((Payload_Size & 0xFF00) >> 8);
+    packet.push_back(Payload_Size & 0xFF);
+
+    // bytes 3 & 4: PC_RTC
+    packet.push_back(PC_RTC & 0xFF00);
+    packet.push_back(PC_RTC & 0x00FF);
+
+    // bytes 5 & 6: SeqID
+    packet.push_back(0x00);
+    packet.push_back(SeqID & 0x00FF);
+    SeqID++;
+    if (SeqID > 0x00FF)
+        SeqID = 0;
+
+    // Payload
+    for (int i = 0; i < Payload_Size; i++)
+    {
+        packet.push_back(Payload[i]);
+    }
+    
     return packet;
 }

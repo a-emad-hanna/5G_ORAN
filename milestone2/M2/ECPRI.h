@@ -16,41 +16,37 @@ class ECPRI
 {
 private:
     // member variables
-    int Ver_Res_Concat;
-    int Message_Type;
-    int Payload_Size;
-    int PC_RTC;
-    int SeqID;
-    vector<int> Payload;
+    uint8_t Message_Type;
+    uint16_t Payload_Size;
+    uint16_t PC_RTC;
+    uint16_t SeqID;
+    vector<uint8_t> Payload;
 public:
     // constructor
     ECPRI(
-        int ver_res_concat = 0x00,
-        int message_type = 0x00,
-        int payload_size = 0,
-        int pc_rtc = 0,
-        int seq_id = 0,
-        vector<int> payload = {}
+        uint8_t message_type = 0x00,
+        uint16_t payload_size = 0,
+        uint16_t pc_rtc = 0,
+        uint16_t seq_id = 0,
+        vector<uint8_t> payload = {}
     );
 
     // getter functions
-    int getVerResConcat() const;
-    int getMessageType() const;
-    int getPayloadSize() const;
-    int getPCRTC() const;
-    int getSeqID() const;
-    vector<int> getPayload() const;
+    uint8_t getMessageType() const;
+    uint16_t getPayloadSize() const;
+    uint16_t getPCRTC() const;
+    uint16_t getSeqID() const;
+    vector<uint8_t> getPayload() const;
 
     // setter functions
-    void setpayloadSize(int payload_size);
-    void setseqID(int seq_id);
-    void setPayload(vector<int> payload);
+    void setpayloadSize(uint16_t payload_size);
+    void setPayload(vector<uint8_t> payload);
 
     // printing
     void printData();
 
     // generate packet
-    vector<int> genPacket(const ECPRI &ecpri);
+    vector<uint8_t> genPacket();
 };
 
 #endif

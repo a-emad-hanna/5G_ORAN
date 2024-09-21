@@ -23,7 +23,7 @@ private:
     int PayloadCount;
     string PayloadType;
     string PayloadFile;
-    vector<int8_t> Payload;
+    vector<uint8_t> Payload;
 
 public:
     // constructor
@@ -34,7 +34,7 @@ public:
         int payload_count = 0,
         string payload_type = "fixed",
         string payload_file = "iq.txt",
-        vector<int8_t> payload = {}
+        vector<uint8_t> payload = {}
     );
 
     // getter functions
@@ -44,7 +44,7 @@ public:
     int getPayloadCount() const;
     string getPayloadType() const;
     string getPayloadFile() const;
-    vector<int8_t> getPayload() const;
+    vector<uint8_t> getPayload() const;
 
     // parse Config
     void parseConfig(string line);
@@ -59,7 +59,7 @@ public:
     void printData();
 
     // generate packet
-    vector<int8_t> genPacket(uint8_t frameID, uint8_t subframeID, uint8_t slotID, uint8_t symbolID, uint8_t packetID);
+    vector<uint8_t> genPacket(uint8_t frameID, uint8_t subframeID, uint8_t slotID, uint8_t symbolID, uint8_t packetID);
 };
 
 #endif

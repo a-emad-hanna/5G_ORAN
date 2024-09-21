@@ -1,7 +1,7 @@
 #include "ORAN.h"
 
 // constructor implementation
-ORAN::ORAN(int scs, int max_nrb, int nrb_per_packet, int payload_count, string payload_type, string payload_file, vector<int8_t> payload)
+ORAN::ORAN(int scs, int max_nrb, int nrb_per_packet, int payload_count, string payload_type, string payload_file, vector<uint8_t> payload)
 {
     SCS = scs;
     MaxNRB = max_nrb;
@@ -19,7 +19,7 @@ int ORAN::getNRBPerPacket() const { return NRBPerPacket; }
 int ORAN::getPayloadCount() const { return PayloadCount; }
 string ORAN::getPayloadType() const { return PayloadType; }
 string ORAN::getPayloadFile() const { return PayloadFile; }
-vector<int8_t> ORAN::getPayload() const { return Payload; }
+vector<uint8_t> ORAN::getPayload() const { return Payload; }
 
 // parse file (setter)
 void ORAN::parseConfig(string line)
@@ -103,12 +103,12 @@ void ORAN::printData()
 }
 
 // generate packet function implementation
-vector<int8_t> ORAN::genPacket(uint8_t frameID, uint8_t subframeID, uint8_t slotID, uint8_t symbolID, uint8_t packetID)
+vector<uint8_t> ORAN::genPacket(uint8_t frameID, uint8_t subframeID, uint8_t slotID, uint8_t symbolID, uint8_t packetID)
 {
-    vector<int8_t> packet;
+    vector<uint8_t> packet;
 
     // calculations
-    uint8_t startPrb = packetID * NRBPerPacket;
+    uint16_t startPrb = packetID * NRBPerPacket;
     uint8_t nrb;
     if ((startPrb + 1 + NRBPerPacket) > MaxNRB)
         nrb = MaxNRB - startPrb;
@@ -134,7 +134,7 @@ vector<int8_t> ORAN::genPacket(uint8_t frameID, uint8_t subframeID, uint8_t slot
     packet.push_back(0x00);
 
     // byte 5: sectionID (remaining 4 least sig bits) | rb (1 bit) | symInc (1 bit) | startPrb (2 most sig bits)
-    packet.push_back((startPrb & 0xC0) >> 8); 
+    packet.push_back((startPrb & 0x300) >> 8); 
 
     // byte 6: startPrb (remaining 8 bits)
     packet.push_back(startPrb & 0xFF);
