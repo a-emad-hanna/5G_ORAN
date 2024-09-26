@@ -45,11 +45,11 @@ vector<uint8_t> ECPRI::genPacket()
     packet.push_back((Payload_Size & 0xFF00) >> 8);
     packet.push_back(Payload_Size & 0xFF);
 
-    // bytes 3 & 4: PC_RTC
+    // bytes 4 & 5: PC_RTC
     packet.push_back(PC_RTC & 0xFF00);
     packet.push_back(PC_RTC & 0x00FF);
 
-    // bytes 5 & 6: SeqID
+    // bytes 6 & 7: SeqID
     packet.push_back(0x00);
     packet.push_back(SeqID & 0x00FF);
     SeqID++;

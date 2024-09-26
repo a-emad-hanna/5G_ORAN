@@ -41,9 +41,19 @@ int main()
         return 1;
     }
 
+    // Check for fragmentation
+    if ((eth1.getMaxPacketSize() - 42) < (24 * oran1.getNRBPerPacket()))
+    {
+        cout << "Reduce The NRB per packet" << endl;
+        return 1;
+    }
+
     // check parsed data
     eth1.printData();
     oran1.printData();
+
+    // total num of bytes
+    int total_bytes = (eth1.getLineRate() * eth1.getCaptureSize() * 1000000)/8; 
 
     // test 
 /*
@@ -83,6 +93,7 @@ int main()
         break;
     }
     uint8_t numPackets = ceil(static_cast<double>(oran1.getMaxNRB()) / oran1.getNRBPerPacket());
+    int packet_bytes = 0;
 
     // print values
     cout << "Number of frames: " << dec << static_cast<unsigned int>(numFrames) << endl;
@@ -121,7 +132,8 @@ int main()
                         eth1.setPayload(ecpri_packet);
                         vector<uint8_t> eth_packet = eth1.genPacket();
 
-                        cout << eth_packet.size() << endl;
+                        // count the packet bytes
+                        packet_bytes += eth_packet.size();
 
                         // write to file
                         int nBytes = eth_packet.size();
@@ -138,6 +150,17 @@ int main()
             }
         }
     }
+
+    int IFG_count = total_bytes - packet_bytes;
+    for (int i = 0; i < IFG_count; i += 4)
+    {
+        for (int o = 0; o < 4; o++)
+        {
+            outFile << setw(2) << setfill('0') << hex << static_cast<int>(0x07);
+        }
+        outFile << endl;
+    }
+
     outFile.close();
 
     return 0;
